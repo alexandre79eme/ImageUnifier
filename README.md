@@ -1,1 +1,2 @@
 # ImageUnifier
+It searches among the sub-directories contained in the given directory, the ones that have images. Then it writes the list of the path of each image in a file. This list is sorted by sub-directory. 
