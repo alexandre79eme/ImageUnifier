@@ -3,9 +3,36 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"strings"
+	"time"
 )
+
+// Structure used to saved the given parameters
+type parameters struct {
+	shuffle    bool
+	path       string
+	outputFile string
+}
+
+func parseArguments(arguments []string) parameters {
+	param := parameters{false, "", ""}
+
+	if strings.HasPrefix(arguments[1], "-") {
+		if arguments[1] == "-r" {
+			param.shuffle = true
+		}
+
+		param.path = arguments[2]
+		param.outputFile = arguments[3]
+	} else {
+		param.path = arguments[1]
+		param.outputFile = arguments[2]
+	}
+
+	return param
+}
 
 // Structure used to save the folders with images
 // I save the folder path and the list of the images name
@@ -85,14 +112,20 @@ func main() {
 
 	if len(os.Args) < 3 {
 		fmt.Println("Error: missing parameters")
-		fmt.Println("USAGE: ImageUnifier <folderPath> <outputFile>")
+		fmt.Println("USAGE: ImageUnifier [-r] <folderPath> <outputFile>")
 		return
 	}
 
-	path := os.Args[1]
-	fileName := os.Args[2]
+	parameters := parseArguments(os.Args)
 
-	folderList := listFilesInSubDir(path)
+	folderList := listFilesInSubDir(parameters.path)
 
-	fillFile(fileName, folderList)
+	if parameters.shuffle {
+		rand.Seed(time.Now().UnixNano())
+		rand.Shuffle(len(folderList), func(i, j int) {
+			folderList[i], folderList[j] = folderList[j], folderList[i]
+		})
+	}
+
+	fillFile(parameters.outputFile, folderList)
 }
