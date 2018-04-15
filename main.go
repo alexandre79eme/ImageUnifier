@@ -29,16 +29,9 @@ func check(e error) {
 // Test if the file is an image
 func isImageFile(extension string) bool {
 	switch extension {
-	case "bmp":
-	case "jpg":
-	case "jpeg":
-	case "gif":
-	case "png":
+	case "bmp", "jpg", "jpeg", "gif", "png":
 		return true
-	default:
-
 	}
-
 	return false
 }
 
@@ -65,6 +58,7 @@ func listFilesInSubDir(path string) []imageFolder {
 		}
 	}
 
+	//fmt.Println(folder)
 	if len(folder.imageList) != 0 {
 		result = append(result, *folder)
 	}
@@ -90,7 +84,9 @@ func fillFile(fileName string, folders []imageFolder) {
 func main() {
 
 	if len(os.Args) < 3 {
+		fmt.Println("Error: missing parameters")
 		fmt.Println("USAGE: ImageUnifier <folderPath> <outputFile>")
+		return
 	}
 
 	path := os.Args[1]
