@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 )
@@ -85,6 +87,38 @@ func listFilesInSubDir(path string) []imageFolder {
 		}
 	}
 
+	sort.Slice(folder.imageList, func(i, j int) bool {
+		first := strings.Split(folder.imageList[i], "")
+		second := strings.Split(folder.imageList[j], "")
+
+		for k := 0; k < len(first); k++ {
+			if k >= len(second) {
+				return false
+			}
+
+			fChar := strings.ToLower(first[k])
+			sChar := strings.ToLower(second[k])
+			fCharInt, _ := regexp.MatchString("[0-9]", fChar)
+			sCharInt, _ := regexp.MatchString("[0-9]", sChar)
+
+			if fCharInt && sCharInt {
+				fCount := countSuccessiveInt(first, k)
+				sCount := countSuccessiveInt(second, k)
+				if fCount != sCount && fChar != "0" && sChar != "0" {
+					return fCount < sCount
+				} else if fCount != sCount && (fChar == "0" || sChar == "0") {
+					return fChar == "0"
+				}
+			}
+
+			if fChar != sChar {
+				return fChar < sChar
+			}
+
+		}
+		return true
+	})
+
 	//fmt.Println(folder)
 	if len(folder.imageList) != 0 {
 		result = append(result, *folder)
@@ -93,16 +127,41 @@ func listFilesInSubDir(path string) []imageFolder {
 	return result
 }
 
+// Count the count of successive integer starting by the choosen start included
+func countSuccessiveInt(array []string, start int) (count int) {
+	for i := start; i < len(array); i++ {
+		charInt, _ := regexp.MatchString("[0-9]", array[i])
+
+		if charInt {
+			count++
+		} else {
+			break
+		}
+	}
+
+	return
+}
+
+// Replace some characters by their asci hexa equivalent. Useful for programs that don't read
+// some special characters.
+func replaceUnsupportedCharacter(s string) (res string) {
+	res = s
+	strings.Replace(res, "[", "%5B", -1)
+	strings.Replace(res, "]", "%5D", -1)
+
+	return
+}
+
 // Write the path of each image of all sub-directories in the file
 func fillFile(fileName string, folders []imageFolder) {
 	f, err := os.Create(fileName)
 	check(err)
 
 	for _, folder := range folders {
-		path := folder.path + "/"
+		path := replaceUnsupportedCharacter(folder.path + "/")
 
 		for _, imageName := range folder.imageList {
-			f.WriteString(path + imageName + "\n")
+			f.WriteString(path + replaceUnsupportedCharacter(imageName) + "\n")
 		}
 	}
 
