@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"regexp"
 	"sort"
 	"strings"
@@ -180,6 +183,24 @@ func replaceUnsupportedCharacter(s string) (res string) {
 	return
 }
 
+// Open the first image of each folder successively
+func interactiveImageReading(folders []imageFolder) {
+	for _, folder := range folders {
+
+		cmd := exec.Command("cmd.exe", "/C", folder.imageList[0])
+		cmd.Dir = folder.path
+		if err := cmd.Run(); err != nil {
+			log.Fatal(err)
+		}
+
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Type 'Enter' to continue: ")
+		text, _ := reader.ReadString('\n')
+		fmt.Println(text)
+	}
+	return
+}
+
 // Write the path of each image of all sub-directories in the file
 func fillFile(fileName string, folders []imageFolder) {
 	f, err := os.Create(fileName)
@@ -215,5 +236,7 @@ func main() {
 
 	if parameters.listMode {
 		fillFile(parameters.outputFile, folderList)
+	} else {
+		interactiveImageReading(folderList)
 	}
 }
