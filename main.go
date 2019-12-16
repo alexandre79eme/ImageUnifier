@@ -13,24 +13,52 @@ import (
 
 // Structure used to saved the given parameters
 type parameters struct {
+	valid      bool
 	shuffle    bool
+	listMode   bool
 	path       string
 	outputFile string
 }
 
 func parseArguments(arguments []string) parameters {
-	param := parameters{false, "", ""}
+	param := parameters{false, false, false, "", ""}
+	pathSet := false
+	outputSet := false
 
-	if strings.HasPrefix(arguments[1], "-") {
-		if arguments[1] == "-r" {
-			param.shuffle = true
+	for i := 1; i < len(arguments); i++ {
+		if strings.HasPrefix(arguments[i], "-") {
+
+			if strings.Contains(arguments[i], "r") {
+				// If the option was already set then there is a input parameter problem
+				if param.shuffle {
+					break
+				}
+				param.shuffle = true
+			}
+
+			if strings.Contains(arguments[i], "l") {
+				// If the option was already set then there is a input parameter problem
+				if param.listMode {
+					break
+				}
+				param.listMode = true
+			}
+
+		} else {
+			if !pathSet {
+				param.path = arguments[i]
+				pathSet = true
+				param.valid = !param.listMode
+			} else if !outputSet && param.listMode {
+				param.outputFile = arguments[i]
+				outputSet = true
+				param.valid = true
+			} else {
+				param.valid = false
+			}
+
 		}
 
-		param.path = arguments[2]
-		param.outputFile = arguments[3]
-	} else {
-		param.path = arguments[1]
-		param.outputFile = arguments[2]
 	}
 
 	return param
@@ -169,13 +197,12 @@ func fillFile(fileName string, folders []imageFolder) {
 
 func main() {
 
-	if len(os.Args) < 3 {
+	parameters := parseArguments(os.Args)
+	if !parameters.valid {
 		fmt.Println("Error: missing parameters")
-		fmt.Println("USAGE: ImageUnifier [-r] <folderPath> <outputFile>")
+		fmt.Println("USAGE: ImageUnifier [-rl] <folderPath> [<outputFile>]")
 		return
 	}
-
-	parameters := parseArguments(os.Args)
 
 	folderList := listFilesInSubDir(parameters.path)
 
@@ -186,5 +213,7 @@ func main() {
 		})
 	}
 
-	fillFile(parameters.outputFile, folderList)
+	if parameters.listMode {
+		fillFile(parameters.outputFile, folderList)
+	}
 }
