@@ -121,6 +121,7 @@ func listFilesInSubDir(path string) []imageFolder {
 	sort.Slice(folder.imageList, func(i, j int) bool {
 		first := strings.Split(folder.imageList[i], "")
 		second := strings.Split(folder.imageList[j], "")
+		regex, _ := regexp.Compile("[0-9]")
 
 		for k := 0; k < len(first); k++ {
 			if k >= len(second) {
@@ -129,8 +130,8 @@ func listFilesInSubDir(path string) []imageFolder {
 
 			fChar := strings.ToLower(first[k])
 			sChar := strings.ToLower(second[k])
-			fCharInt, _ := regexp.MatchString("[0-9]", fChar)
-			sCharInt, _ := regexp.MatchString("[0-9]", sChar)
+			fCharInt := regex.MatchString(fChar)
+			sCharInt := regex.MatchString(sChar)
 
 			if fCharInt && sCharInt {
 				fCount := countSuccessiveInt(first, k)
@@ -160,8 +161,10 @@ func listFilesInSubDir(path string) []imageFolder {
 
 // Count the count of successive integer starting by the choosen start included
 func countSuccessiveInt(array []string, start int) (count int) {
+	regex, _ := regexp.Compile("[0-9]")
+
 	for i := start; i < len(array); i++ {
-		charInt, _ := regexp.MatchString("[0-9]", array[i])
+		charInt := regex.MatchString(array[i])
 
 		if charInt {
 			count++
@@ -176,9 +179,9 @@ func countSuccessiveInt(array []string, start int) (count int) {
 // Replace some characters by their asci hexa equivalent. Useful for programs that don't read
 // some special characters.
 func replaceUnsupportedCharacter(s string) (res string) {
-	res = s
-	strings.Replace(res, "[", "%5B", -1)
-	strings.Replace(res, "]", "%5D", -1)
+
+	res = strings.Replace(s, "[", "%5B", -1)
+	res = strings.Replace(res, "]", "%5D", -1)
 
 	return
 }
@@ -198,7 +201,6 @@ func interactiveImageReading(folders []imageFolder) {
 		text, _ := reader.ReadString('\n')
 		fmt.Println(text)
 	}
-	return
 }
 
 // Write the path of each image of all sub-directories in the file
